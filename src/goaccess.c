@@ -53,11 +53,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef HAVE_LIBTOKYOCABINET
-#include "tcabdb.h"
-#else
+#include "mdb.h"
+#include "deps/liblmdb/lmdb.h"
 #include "gkhash.h"
-#endif
 
 #ifdef HAVE_GEOLOCATION
 #include "geoip1.h"
@@ -279,7 +277,7 @@ allocate_holder_by_module (GModule module)
   GRawData *raw_data;
 
   /* extract data from the corresponding hash table */
-  raw_data = parse_raw_data (module);
+  raw_data = store_parse_raw_data (module);
   if (!raw_data) {
     LOG_DEBUG (("raw data is NULL for module: %d.\n", module));
     return;
@@ -1155,7 +1153,7 @@ init_processing (void)
   /* perform some additional checks before parsing panels */
   verify_panels ();
   /* initialize storage */
-  init_storage ();
+  ginit_storage ();
   if (conf.load_from_disk)
     set_general_stats ();
   set_spec_date_format ();

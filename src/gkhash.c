@@ -1595,7 +1595,7 @@ parse_raw_str_data (GModule module)
  * On error, NULL is returned.
  * On success the GRawData sorted is returned */
 GRawData *
-parse_raw_data (GModule module)
+ht_parse_raw_data (GModule module)
 {
   GRawData *raw_data;
 

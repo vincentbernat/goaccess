@@ -463,7 +463,7 @@ get_str_valid_reqs (GLog * glog)
 static char *
 get_str_notfound_reqs (void)
 {
-  return int2str (ht_get_size_datamap (NOT_FOUND), 0);
+  return int2str (store_get_size_datamap (NOT_FOUND), 0);
 }
 
 /* Convert the number of referrers to a string.
@@ -472,7 +472,7 @@ get_str_notfound_reqs (void)
 static char *
 get_str_ref_reqs (void)
 {
-  return int2str (ht_get_size_datamap (REFERRERS), 0);
+  return int2str (store_get_size_datamap (REFERRERS), 0);
 }
 
 /* Convert the number of requests to a string.
@@ -481,7 +481,7 @@ get_str_ref_reqs (void)
 static char *
 get_str_reqs (void)
 {
-  return int2str (ht_get_size_datamap (REQUESTS), 0);
+  return int2str (store_get_size_datamap (REQUESTS), 0);
 }
 
 /* Convert the number of static requests to a string.
@@ -490,7 +490,7 @@ get_str_reqs (void)
 static char *
 get_str_static_reqs (void)
 {
-  return int2str (ht_get_size_datamap (REQUESTS_STATIC), 0);
+  return int2str (store_get_size_datamap (REQUESTS_STATIC), 0);
 }
 
 /* Convert the number of unique visitors to a string.
@@ -499,7 +499,7 @@ get_str_static_reqs (void)
 static char *
 get_str_visitors (void)
 {
-  return int2str (ht_get_size_uniqmap (VISITORS), 0);
+  return int2str (store_get_size_uniqmap (VISITORS), 0);
 }
 
 /* Convert the time taken to process the log to a string.

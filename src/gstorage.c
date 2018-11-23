@@ -35,15 +35,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_LIBTOKYOCABINET
-#include "tcabdb.h"
-#else
-#include "gkhash.h"
-#endif
 
 #include "gstorage.h"
 
 #include "error.h"
+#include "gkhash.h"
+#include "mdb.h"
 #include "xmalloc.h"
 
 /* Allocate memory for a new GMetrics instance.
@@ -81,12 +78,116 @@ uint642ptr (uint64_t val)
   return ptr;
 }
 
+char *
+store_get_hostname (const char *host)
+{
+  if (conf.keep_db_files)
+    return db_get_hostname (host);
+  return ht_get_hostname (host);
+}
+
+char *
+store_get_datamap (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_datamap (module, key);
+  return ht_get_datamap (module, key);
+}
+
+int
+store_get_hits (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_hits (module, key);
+  return ht_get_hits (module, key);
+}
+
+uint64_t
+store_get_bw (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_bw (module, key);
+  return ht_get_bw (module, key);
+}
+
+uint64_t
+store_get_cumts (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_cumts (module, key);
+  return ht_get_cumts (module, key);
+}
+
+uint64_t
+store_get_maxts (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_maxts (module, key);
+  return ht_get_maxts (module, key);
+}
+
+int
+store_get_visitors (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_visitors (module, key);
+  return ht_get_visitors (module, key);
+}
+
+char *
+store_get_method (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_method (module, key);
+  return ht_get_method (module, key);
+}
+
+char *
+store_get_protocol (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_protocol (module, key);
+  return ht_get_protocol (module, key);
+}
+
+uint32_t
+store_get_size_uniqmap(GModule module)
+{
+  if (conf.keep_db_files)
+    return db_get_size_uniqmap (module);
+  return ht_get_size_uniqmap (module);
+}
+
+uint32_t
+store_get_size_datamap(GModule module)
+{
+  if (conf.keep_db_files)
+    return db_get_size_datamap (module);
+  return ht_get_size_datamap(module);
+}
+
+char *
+store_get_root (GModule module, int key)
+{
+  if (conf.keep_db_files)
+    return db_get_root (module, key);
+  return ht_get_root (module, key);
+}
+
+GRawData *
+store_parse_raw_data(GModule module)
+{
+  if (conf.keep_db_files)
+    return db_parse_raw_data (module);
+  return ht_parse_raw_data (module);
+}
+
 /* Set the module totals to calculate percentages. */
 void
 set_module_totals (GModule module, GPercTotals * totals)
 {
-  totals->bw = ht_get_meta_data (module, "bytes");
-  totals->hits = ht_get_meta_data (module, "hits");
+  totals->bw       = ht_get_meta_data (module, "bytes");
+  totals->hits     = ht_get_meta_data (module, "hits");
   totals->visitors = ht_get_meta_data (module, "visitors");
 }
 

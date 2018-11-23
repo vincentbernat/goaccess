@@ -4,6 +4,7 @@
 AC_PREREQ(2.59)
 AC_INIT([goaccess], [1.3], [goaccess@prosoftcorp.com], [], [http://goaccess.io])
 AM_INIT_AUTOMAKE
+AC_PROG_RANLIB
 AC_CONFIG_SRCDIR([src/goaccess.c])
 AC_CONFIG_HEADERS([src/config.h])
 
@@ -146,69 +147,14 @@ else
   fi
 fi
 
-# Tokyo Cabinet
+# Deprecated Tokyo Cabinet
 AC_ARG_ENABLE(tcb, [  --enable-tcb   Enable TokyoCabinet database. Default is disabled],
-  [tcb="$enableval"], tcb=no)
+  [AC_MSG_ERROR([
+    *** TokyoCabinet has been deprecated in favor of lmdb.
+        The default build includes an on-disk storage.
+  ])])
 
-WITH_TC=no
-if test "$tcb" = "memhash"; then
-  WITH_TC=yes
-  AC_DEFINE([TCB_MEMHASH], [1], ["Build using on-memory hash database"])
-elif test "$tcb" = "btree"; then
-  AC_DEFINE([TCB_BTREE], [1], ["Build using on-disk B+ Tree database"])
-  WITH_TC=yes
-fi
-
-if test "$WITH_TC" = "yes"; then
-  AC_CHECK_LIB([tokyocabinet], [tchdbnew], [],
-    [AC_MSG_ERROR([*** Missing development libraries for Tokyo Cabinet Database])])
-
-  AC_ARG_ENABLE([zlib], [  --disable-zlib   Build without ZLIB compression],
-    [zlib="$enableval"], zlib=yes)
-
-  if test "$zlib" = "yes"; then
-    AC_CHECK_LIB(z, gzread, [Z_FLAG=-lz], AC_MSG_ERROR([
-      *** zlib is required. If zlib compression is not needed
-      *** you can use --disable-zlib.
-      *** Debian based distributions zlib1g-dev
-      *** Red Hat based distributions zlib-devel
-    ]))
-    AC_DEFINE([HAVE_ZLIB], [1], ["Build using ZLIB"])
-    LDFLAGS="$LDFLAGS $Z_FLAG"
-  fi
-
-  AC_ARG_ENABLE([bzip], [  --disable-bzip   Build without BZIP2 compression],
-    [bz2="$enableval"], bz2=yes)
-
-  if test "$bz2" = "yes"; then
-    AC_CHECK_LIB(bz2, BZ2_bzopen, [BZ2_FLAG=-lbz2], AC_MSG_ERROR([
-      *** BZIP2 is required. If BZIP2 compression is not needed
-      *** you can use --disable-bzip.
-      *** Debian based distributions libbz2-dev
-      *** Red Hat based distributions bzip2-devel
-    ]))
-    AC_DEFINE([HAVE_BZ2], [1], ["Build using BZ2"])
-    LDFLAGS="$LDFLAGS $BZ2_FLAG"
-  fi
-
-  case "$host_os" in
-    *darwin*|*bsd*)
-       LDFLAGS="$LDFLAGS -ltokyocabinet -lc"
-    ;;
-    *)
-       LDFLAGS="$LDFLAGS -ltokyocabinet -lrt -lc"
-    ;;
-  esac
-fi
-AM_CONDITIONAL([TCB], [test "$WITH_TC" = "yes"])
-
-if test "$tcb" = "memhash"; then
-  storage="In-memory Hash Database (Tokyo Cabinet)"
-elif test "$tcb" = "btree"; then
-  storage="On-disk B+ Tree Database (Tokyo Cabinet)"
-else
-  storage="In-memory Hash Database (Default)"
-fi
+storage="In-memory Hash Database (Default) & LMDB"
 
 HAS_SEDTR=no
 AC_CHECK_PROG([SED_CHECK],[sed],[yes],[no])
@@ -288,7 +234,8 @@ AC_CHECK_FUNCS([strstr])
 AC_CHECK_FUNCS([strtol])
 AC_CHECK_FUNCS([strtoull])
 
-AC_CONFIG_FILES([Makefile po/Makefile.in])
+AC_CONFIG_FILES([Makefile po/Makefile.in deps/Makefile deps/liblmdb/Makefile])
+
 AC_OUTPUT
 
 cat << EOF

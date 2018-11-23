@@ -2,6 +2,10 @@
 bin_PROGRAMS = goaccess
 AUTOMAKE_OPTIONS = subdir-objects
 
+SUBDIRS = \
+  po      \
+  deps
+
 dist_noinst_DATA =                \
   resources/tpls.html             \
   resources/css/app.css           \
@@ -131,6 +135,8 @@ goaccess_SOURCES = \
    src/gdns.h          \
    src/gholder.c       \
    src/gholder.h       \
+   src/gkhash.c        \
+   src/gkhash.h        \
    src/gmenu.c         \
    src/gmenu.h         \
    src/goaccess.c      \
@@ -143,7 +149,10 @@ goaccess_SOURCES = \
    src/gwsocket.h      \
    src/json.c          \
    src/json.h          \
+   src/khash.h         \
    src/labels.h        \
+   src/mdb.c           \
+   src/mdb.h           \
    src/opesys.c        \
    src/opesys.h        \
    src/options.c       \
@@ -167,19 +176,6 @@ goaccess_SOURCES = \
    src/xmalloc.c       \
    src/xmalloc.h
 
-if TCB
-goaccess_SOURCES += \
-   src/tcabdb.c     \
-   src/tcabdb.h     \
-   src/tcbtdb.c     \
-   src/tcbtdb.h
-else
-goaccess_SOURCES += \
-   src/khash.h      \
-   src/gkhash.c     \
-   src/gkhash.h
-endif
-
 if GEOIP_LEGACY
 goaccess_SOURCES +=  \
    src/geoip1.c \
@@ -198,9 +194,13 @@ else
 AM_CFLAGS = -O2 -DSYSCONFDIR=\"$(sysconfdir)\"
 endif
 
+AM_LDFLAGS =
 if WITH_RDYNAMIC
-AM_LDFLAGS = -rdynamic
+AM_LDFLAGS += -rdynamic
 endif
+
+# lmdb
+goaccess_LDADD = ${top_builddir}/deps/liblmdb/liblmdb.a
 
 AM_CFLAGS += -Wno-long-long -Wall -W -Wnested-externs -Wformat=2
 AM_CFLAGS += -Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations
@@ -209,8 +209,6 @@ AM_CFLAGS += -Wbad-function-cast -Winline -Wcast-align -Wextra
 AM_CFLAGS += -Wdeclaration-after-statement -Wno-missing-field-initializers
 
 dist_man_MANS = goaccess.1
-
-SUBDIRS = po
 
 ACLOCAL_AMFLAGS = -I m4
 

@@ -55,12 +55,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef HAVE_LIBTOKYOCABINET
-#include "tcabdb.h"
-#include "tcbtdb.h"
-#else
-#include "gkhash.h"
-#endif
 
 #ifdef HAVE_GEOLOCATION
 #include "geoip1.h"
@@ -68,6 +62,8 @@
 
 #include "parser.h"
 
+#include "mdb.h"
+#include "gkhash.h"
 #include "browsers.h"
 #include "goaccess.h"
 #include "error.h"
@@ -1770,6 +1766,8 @@ ignore_line (GLog * glog, GLogItem * logitem)
 static int
 insert_keymap (char *key, GModule module)
 {
+  if (conf.keep_db_files)
+    return db_insert_keymap (module, key);
   return ht_insert_keymap (module, key);
 }
 
@@ -1777,7 +1775,10 @@ insert_keymap (char *key, GModule module)
 static void
 insert_data (int nkey, const char *data, GModule module)
 {
-  ht_insert_datamap (module, nkey, data);
+  if (conf.keep_db_files)
+    db_insert_datamap (module, nkey, data);
+  else
+    ht_insert_datamap (module, nkey, data);
 }
 
 /* A wrapper function to insert a uniqmap string key.
@@ -1788,6 +1789,8 @@ insert_data (int nkey, const char *data, GModule module)
 static int
 insert_uniqmap (char *uniq_key, GModule module)
 {
+  if (conf.keep_db_files)
+    return db_insert_uniqmap (module, uniq_key);
   return ht_insert_uniqmap (module, uniq_key);
 }
 
@@ -1796,7 +1799,10 @@ insert_uniqmap (char *uniq_key, GModule module)
 static void
 insert_rootmap (int root_nkey, const char *root, GModule module)
 {
-  ht_insert_rootmap (module, root_nkey, root);
+  if (conf.keep_db_files)
+    db_insert_rootmap (module, root_nkey, root);
+  else
+    ht_insert_rootmap (module, root_nkey, root);
 }
 
 /* A wrapper function to insert a data int key mapped to the
@@ -1804,15 +1810,23 @@ insert_rootmap (int root_nkey, const char *root, GModule module)
 static void
 insert_root (int data_nkey, int root_nkey, GModule module)
 {
-  ht_insert_root (module, data_nkey, root_nkey);
+  if (conf.keep_db_files)
+    db_insert_root (module, data_nkey, root_nkey);
+  else
+    ht_insert_root (module, data_nkey, root_nkey);
 }
 
 /* A wrapper function to increase hits counter from an int key. */
 static void
 insert_hit (int data_nkey, GModule module)
 {
-  ht_insert_hits (module, data_nkey, 1);
-  ht_insert_meta_data (module, "hits", 1);
+  if (conf.keep_db_files) {
+    db_insert_hits (module, data_nkey, 1);
+    db_insert_meta_data (module, "hits", 1);
+  } else {
+    ht_insert_hits (module, data_nkey, 1);
+    ht_insert_meta_data (module, "hits", 1);
+  }
 }
 
 /* A wrapper function to increase visitors counter from an int
@@ -1820,8 +1834,13 @@ insert_hit (int data_nkey, GModule module)
 static void
 insert_visitor (int uniq_nkey, GModule module)
 {
-  ht_insert_visitor (module, uniq_nkey, 1);
-  ht_insert_meta_data (module, "visitors", 1);
+  if (conf.keep_db_files) {
+    db_insert_visitor (module, uniq_nkey, 1);
+    db_insert_meta_data (module, "visitors", 1);
+  } else {
+    ht_insert_visitor (module, uniq_nkey, 1);
+    ht_insert_meta_data (module, "visitors", 1);
+  }
 }
 
 /* A wrapper function to increases bandwidth counter from an int
@@ -1829,8 +1848,13 @@ insert_visitor (int uniq_nkey, GModule module)
 static void
 insert_bw (int data_nkey, uint64_t size, GModule module)
 {
-  ht_insert_bw (module, data_nkey, size);
-  ht_insert_meta_data (module, "bytes", size);
+  if (conf.keep_db_files) {
+    db_insert_bw (module, data_nkey, size);
+    db_insert_meta_data (module, "bytes", size);
+  } else {
+    ht_insert_bw (module, data_nkey, size);
+    ht_insert_meta_data (module, "bytes", size);
+  }
 }
 
 /* A wrapper call to increases cumulative time served counter
@@ -1838,8 +1862,13 @@ insert_bw (int data_nkey, uint64_t size, GModule module)
 static void
 insert_cumts (int data_nkey, uint64_t ts, GModule module)
 {
-  ht_insert_cumts (module, data_nkey, ts);
-  ht_insert_meta_data (module, "cumts", ts);
+  if (conf.keep_db_files) {
+    db_insert_cumts (module, data_nkey, ts);
+    db_insert_meta_data (module, "cumts", ts);
+  } else {
+    ht_insert_cumts (module, data_nkey, ts);
+    ht_insert_meta_data (module, "cumts", ts);
+  }
 }
 
 /* A wrapper call to insert the maximum time served counter from
@@ -1847,14 +1876,22 @@ insert_cumts (int data_nkey, uint64_t ts, GModule module)
 static void
 insert_maxts (int data_nkey, uint64_t ts, GModule module)
 {
-  ht_insert_maxts (module, data_nkey, ts);
-  ht_insert_meta_data (module, "maxts", ts);
+  if (conf.keep_db_files) {
+    db_insert_maxts (module, data_nkey, ts);
+    db_insert_meta_data (module, "maxts", ts);
+  } else {
+    ht_insert_maxts (module, data_nkey, ts);
+    ht_insert_meta_data (module, "maxts", ts);
+  }
 }
 
 static void
 insert_method (int nkey, const char *data, GModule module)
 {
-  ht_insert_method (module, nkey, data ? data : "---");
+  if (conf.keep_db_files)
+    db_insert_method (module, nkey, data ? data : "---");
+  else
+    ht_insert_method (module, nkey, data ? data : "---");
 }
 
 /* A wrapper call to insert a method given an int key and string
@@ -1862,7 +1899,10 @@ insert_method (int nkey, const char *data, GModule module)
 static void
 insert_protocol (int nkey, const char *data, GModule module)
 {
-  ht_insert_protocol (module, nkey, data ? data : "---");
+  if (conf.keep_db_files)
+    db_insert_protocol (module, nkey, data ? data : "---");
+  else
+    ht_insert_protocol (module, nkey, data ? data : "---");
 }
 
 /* A wrapper call to insert an agent for a hostname given an int
@@ -1870,8 +1910,39 @@ insert_protocol (int nkey, const char *data, GModule module)
 static void
 insert_agent (int data_nkey, int agent_nkey, GModule module)
 {
-  ht_insert_agent (module, data_nkey, agent_nkey);
+  //ht_insert_agent (module, data_nkey, agent_nkey);
 }
+
+static int
+insert_unique_key (const char *key)
+{
+  /* Insert one unique visitor key per request to avoid the
+   * overhead of storing one key per module */
+  if (conf.keep_db_files)
+    return db_insert_unique_key (key);
+  return ht_insert_unique_key (key);
+}
+
+static int
+insert_agent_key (const char *key)
+{
+  /* insert UA key and get a numeric value */
+  if (conf.keep_db_files)
+    return db_insert_agent_key (key);
+  return ht_insert_agent_key (key);
+}
+
+static void
+insert_agent_value (int key, const char *value)
+{
+  /* insert a numeric key and map it to a UA string */
+  if (conf.keep_db_files)
+    db_insert_agent_value (key, value);
+  else
+    ht_insert_agent_value (key, value);
+}
+
+
 
 /* The following generates a unique key to identity unique visitors.
  * The key is made out of the IP, date, and user agent.
@@ -2483,7 +2554,7 @@ process_log (GLogItem * logitem)
 
   /* Insert one unique visitor key per request to avoid the
    * overhead of storing one key per module */
-  logitem->uniq_nkey = ht_insert_unique_key (logitem->uniq_key);
+  logitem->uniq_nkey = insert_unique_key (logitem->uniq_key);
 
   /* If we need to store user agents per IP, then we store them and retrieve
    * its numeric key.
@@ -2491,9 +2562,9 @@ process_log (GLogItem * logitem)
    * map for value -> key*/
   if (conf.list_agents) {
     /* insert UA key and get a numeric value */
-    logitem->agent_nkey = ht_insert_agent_key (logitem->agent);
+    logitem->agent_nkey = insert_agent_key (logitem->agent);
     /* insert a numeric key and map it to a UA string */
-    ht_insert_agent_value (logitem->agent_nkey, logitem->agent);
+    insert_agent_value (logitem->agent_nkey, logitem->agent);
   }
 
   FOREACH_MODULE (idx, module_list) {

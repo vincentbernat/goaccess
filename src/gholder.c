@@ -414,7 +414,7 @@ add_host_child_to_holder (GHolder * h)
   set_host_sub_list (h, sub_list);
 
   pthread_mutex_lock (&gdns_thread.mutex);
-  hostname = ht_get_hostname (ip);
+  hostname = store_get_hostname (ip);
   pthread_mutex_unlock (&gdns_thread.mutex);
 
   /* determine if we have the IP's hostname */
@@ -438,15 +438,14 @@ add_host_child_to_holder (GHolder * h)
  * On error, no values are set and 1 is returned.
  * On success, the data and hits values are set and 0 is returned. */
 static int
-set_data_hits_keys (GModule module, GRawDataItem item, GRawDataType type,
-                    char **data, int *hits)
+set_data_hits_keys (GModule module, GRawDataItem item, GRawDataType type, char **data, int *hits)
 {
   if (type == INTEGER) {
-    if (!(*data = ht_get_datamap (module, item.key)))
+    if (!(*data = store_get_datamap (module, item.key)))
       return 1;
     *hits = item.value.ivalue;
   } else if (type == STRING) {
-    if (!(*hits = ht_get_hits (module, item.key)))
+    if (!(*hits = store_get_hits (module, item.key)))
       return 1;
     *data = xstrdup (item.value.svalue);
   }
@@ -461,35 +460,34 @@ set_data_holder_metrics (GRawDataItem item, GHolder * h, char *data, int hits)
   int visitors = 0;
   uint64_t bw = 0, cumts = 0, maxts = 0;
 
-  bw = ht_get_bw (h->module, item.key);
-  cumts = ht_get_cumts (h->module, item.key);
-  maxts = ht_get_maxts (h->module, item.key);
-  visitors = ht_get_visitors (h->module, item.key);
+  bw       = store_get_bw (h->module, item.key);
+  cumts    = store_get_cumts (h->module, item.key);
+  maxts    = store_get_maxts (h->module, item.key);
+  visitors = store_get_visitors (h->module, item.key);
 
-  h->items[h->idx].metrics = new_gmetrics ();
-  h->items[h->idx].metrics->hits = hits;
-  h->items[h->idx].metrics->data = data;
-  h->items[h->idx].metrics->visitors = visitors;
-  h->items[h->idx].metrics->bw.nbw = bw;
+  h->items[h->idx].metrics            = new_gmetrics ();
+  h->items[h->idx].metrics->hits      = hits;
+  h->items[h->idx].metrics->data      = data;
+  h->items[h->idx].metrics->visitors  = visitors;
+  h->items[h->idx].metrics->bw.nbw    = bw;
   h->items[h->idx].metrics->avgts.nts = cumts / hits;
   h->items[h->idx].metrics->cumts.nts = cumts;
   h->items[h->idx].metrics->maxts.nts = maxts;
 
   if (conf.append_method) {
-    method = ht_get_method (h->module, item.key);
+    method = store_get_method (h->module, item.key);
     h->items[h->idx].metrics->method = method;
   }
 
   if (conf.append_protocol) {
-    protocol = ht_get_protocol (h->module, item.key);
+    protocol = store_get_protocol (h->module, item.key);
     h->items[h->idx].metrics->protocol = protocol;
   }
 }
 
 /* A wrapper to set a host item */
 static void
-set_host (GRawDataItem item, GHolder * h, const GPanel * panel, char *data,
-          int hits)
+set_host (GRawDataItem item, GHolder * h, const GPanel * panel, char *data, int hits)
 {
   set_data_holder_metrics (item, h, xstrdup (data), hits);
   if (panel->holder_callback)
@@ -500,8 +498,7 @@ set_host (GRawDataItem item, GHolder * h, const GPanel * panel, char *data,
 /* Set all panel data. This will set data for panels that do not
  * contain sub items. A function pointer is used for post data set. */
 static void
-add_data_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
-                    const GPanel * panel)
+add_data_to_holder (GRawDataItem item, GHolder * h, GRawDataType type, const GPanel * panel)
 {
   char *data = NULL;
   int hits = 0;
@@ -519,8 +516,7 @@ add_data_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
 /* Set all panel data. This will set data for panels that do not
  * contain sub items. A function pointer is used for post data set. */
 static void
-add_host_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
-                    const GPanel * panel)
+add_host_to_holder (GRawDataItem item, GHolder * h, GRawDataType type, const GPanel * panel)
 {
   char buf4[INET_ADDRSTRLEN];
   char buf6[INET6_ADDRSTRLEN];
@@ -570,8 +566,7 @@ add_host_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
 
 /* Set all root panel data. This will set the root nodes. */
 static int
-set_root_metrics (GRawDataItem item, GRawDataType type, GModule module,
-                  GMetrics ** nmetrics)
+set_root_metrics (GRawDataItem item, GRawDataType type, GModule module, GMetrics ** nmetrics)
 {
   GMetrics *metrics;
   char *data = NULL;
@@ -581,10 +576,10 @@ set_root_metrics (GRawDataItem item, GRawDataType type, GModule module,
   if (set_data_hits_keys (module, item, type, &data, &hits) == 1)
     return 1;
 
-  bw = ht_get_bw (module, item.key);
-  cumts = ht_get_cumts (module, item.key);
-  maxts = ht_get_maxts (module, item.key);
-  visitors = ht_get_visitors (module, item.key);
+  bw       = store_get_bw (module, item.key);
+  cumts    = store_get_cumts (module, item.key);
+  maxts    = store_get_maxts (module, item.key);
+  visitors = store_get_visitors (module, item.key);
 
   metrics = new_gmetrics ();
   metrics->avgts.nts = cumts / hits;
@@ -601,8 +596,7 @@ set_root_metrics (GRawDataItem item, GRawDataType type, GModule module,
 
 /* Set all root panel data, including sub list items. */
 static void
-add_root_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
-                    GO_UNUSED const GPanel * panel)
+add_root_to_holder (GRawDataItem item, GHolder * h, GRawDataType type, GO_UNUSED const GPanel * panel)
 {
   GSubList *sub_list;
   GMetrics *metrics, *nmetrics;
@@ -612,7 +606,7 @@ add_root_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
   if (set_root_metrics (item, type, h->module, &nmetrics) == 1)
     return;
 
-  if (!(root = (ht_get_root (h->module, item.key))))
+  if (!(root = (store_get_root (h->module, item.key))))
     return;
 
   /* add data as a child node into holder */
@@ -640,8 +634,7 @@ add_root_to_holder (GRawDataItem item, GHolder * h, GRawDataType type,
   h->items[idx].metrics->bw.nbw += nmetrics->bw.nbw;
   h->items[idx].metrics->hits += nmetrics->hits;
   h->items[idx].metrics->visitors += nmetrics->visitors;
-  h->items[idx].metrics->avgts.nts =
-    h->items[idx].metrics->cumts.nts / h->items[idx].metrics->hits;
+  h->items[idx].metrics->avgts.nts = h->items[idx].metrics->cumts.nts / h->items[idx].metrics->hits;
   if (nmetrics->maxts.nts > h->items[idx].metrics->maxts.nts)
     h->items[idx].metrics->maxts.nts = nmetrics->maxts.nts;
 
@@ -655,13 +648,13 @@ load_holder_data (GRawData * raw_data, GHolder * h, GModule module, GSort sort)
   int i, size = 0, max_choices = get_max_choices ();
   const GPanel *panel = panel_lookup (module);
 
-  size = raw_data->size;
-  h->holder_size = size > max_choices ? max_choices : size;
-  h->ht_size = size;
-  h->idx = 0;
-  h->module = module;
+  size              = raw_data->size;
+  h->holder_size    = size > max_choices ? max_choices : size;
+  h->ht_size        = size;
+  h->idx            = 0;
+  h->module         = module;
   h->sub_items_size = 0;
-  h->items = new_gholder_item (h->holder_size);
+  h->items          = new_gholder_item (h->holder_size);
 
   for (i = 0; i < h->holder_size; i++) {
     panel->insert (raw_data->items[i], h, raw_data->type, panel);

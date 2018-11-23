@@ -151,13 +151,13 @@ struct option long_opts[] = {
   {"cache-ncnum"          , required_argument , 0 ,  0  } ,
   {"compression"          , required_argument , 0 ,  0  } ,
   {"db-path"              , required_argument , 0 ,  0  } ,
-  {"keep-db-files"        , no_argument       , 0 ,  0  } ,
-  {"load-from-disk"       , no_argument       , 0 ,  0  } ,
   {"tune-bnum"            , required_argument , 0 ,  0  } ,
   {"tune-lmemb"           , required_argument , 0 ,  0  } ,
   {"tune-nmemb"           , required_argument , 0 ,  0  } ,
   {"xmmap"                , required_argument , 0 ,  0  } ,
 #endif
+  {"keep-db-files"        , no_argument       , 0 ,  0  } ,
+  {"load-from-disk"       , no_argument       , 0 ,  0  } ,
   {0, 0, 0, 0}
 };
 

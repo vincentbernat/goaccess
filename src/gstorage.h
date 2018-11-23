@@ -31,6 +31,7 @@
 #define GSTORAGE_H_INCLUDED
 
 #include "commons.h"
+#include "parser.h"
 
 /* Total number of storage metrics (GSMetric) */
 #define GSMTRC_TOTAL 14
@@ -56,13 +57,24 @@ typedef enum GSMetric_
 
 GMetrics *new_gmetrics (void);
 
+char *store_get_datamap (GModule module, int key);
+char *store_get_hostname (const char *host);
+char *store_get_method (GModule module, int key);
+char *store_get_protocol (GModule module, int key);
+char *store_get_root (GModule module, int key);
+GRawData *store_parse_raw_data(GModule module);
 int *int2ptr (int val);
+int store_get_hits (GModule module, int key);
+int store_get_visitors (GModule module, int key);
+uint32_t store_get_size_datamap(GModule module);
+uint32_t store_get_size_uniqmap(GModule module);
+uint64_t store_get_bw (GModule module, int key);
+uint64_t store_get_cumts (GModule module, int key);
+uint64_t store_get_maxts (GModule module, int key);
 uint64_t *uint642ptr (uint64_t val);
-
 void *get_storage_metric_by_module (GModule module, GSMetric metric);
 void *get_storage_metric (GModule module, GSMetric metric);
-void set_data_metrics (GMetrics * ometrics, GMetrics ** nmetrics,
-                       GPercTotals totals);
+void set_data_metrics (GMetrics * ometrics, GMetrics ** nmetrics, GPercTotals totals);
 void set_module_totals (GModule module, GPercTotals * totals);
 
 #endif // for #ifndef GSTORAGE_H

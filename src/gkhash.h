@@ -244,7 +244,6 @@ void ht_get_cumts_min_max (GModule module, uint64_t * min, uint64_t * max);
 void ht_get_hits_min_max (GModule module, int *min, int *max);
 void ht_get_maxts_min_max (GModule module, uint64_t * min, uint64_t * max);
 void ht_get_visitors_min_max (GModule module, int *min, int *max);
-
-GRawData *parse_raw_data (GModule module);
+GRawData *ht_parse_raw_data (GModule module);
 
 #endif // for #ifndef GKHASH_H

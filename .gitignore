@@ -67,6 +67,9 @@ Makefile.in
 *.x86_64
 *.hex
 
+# tar builds 
+*.tar.gz
+
 # Vagrant
 .vagrant
 
